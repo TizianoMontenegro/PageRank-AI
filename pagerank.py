@@ -219,7 +219,61 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+
+    page_rank = dict()
+    N = len(corpus)
+    """"Initialize page ranks with equal probability"""
+    for page in corpus:
+        page_rank[page] = 1 / N
+    # print(base_rank)
+
+    """Create a dictionary to store pages that link to each page"""
+    links_to = dict()
+    for page in corpus:
+        links_to[page] = set()
+
+    """Add the pages that link to each page"""
+    for page, links in corpus.items():
+        for link in links:
+            links_to[link].add(page)
+
+    """Handle pages with no outgoing links"""
+    for page, links in corpus.items():
+        if len(links) == 0:
+            """If a page has no links, assume it links to all pages"""
+            corpus[page] = set(corpus.keys())
+        
+    """Iterative calculation until convergence"""
+    while True:
+        """Save current ranks for convergence check"""
+        prev_ranks = dict(page_rank)
+
+        """Update each page's rank according to the formula"""
+        for page in corpus:
+            """Calculate the sum part of the formula: sum(PR(i) / NumLins(i))"""
+            sum_part = 0
+            for linking_page in links_to[page]:
+                sum_part += page_rank[linking_page] / len(corpus[linking_page])
+            
+            """Apply the Pagerank formula"""
+            page_rank[page] = (1- damping_factor) / N + damping_factor * sum_part
+            
+        """Check for convergence (if all differences are less than 0.001)"""
+        converged = True
+        for page in page_rank:
+            if abs(page_rank[page] - prev_ranks[page]) > 0.001:
+                converged = False
+                break
+        
+        if converged == True:
+            break
+
+    """Normalize the page ranks to ensure they sum to 1"""
+    total = sum(page_rank.values())
+    for page in page_rank:
+        page_rank[page] /= total
+
+    return page_rank
 
 
 if __name__ == "__main__":
